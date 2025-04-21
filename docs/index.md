@@ -66,5 +66,5 @@ Have questions, ideas, or want to contribute? **Let’s innovate together!** Rea
 
 Help us **transform the manufacturing industry** by sharing these events with your network:  
 
-🔹 **Share on LinkedIn** → [AI MFG Ignited Event Page](https://aka.ms/aimfgIgnited)  
-🔹 **Visit the GitHub Repo for more details** → [AI MFG Ignited GitHub Repository](https://github.com/wnwanne/aimfgIgnited/tree/main)
+🔹 **Share on LinkedIn** → [AI MFG Ignited Event Page](https://microsoft.github.io/AIMFGIgnited/)  
+🔹 **Visit the GitHub Repo for more details** → [AI MFG Ignited GitHub Repository](https://github.com/microsoft/AIMFGIgnited)
