@@ -1,5 +1,20 @@
-<div align="center">
-  <img src="utils/images/AI MFG Ignited.jpg" alt="AI MFG Ignited Banner" style="width:100%; height:auto;">
+<!-- Attempt to force the banner to span the entire browser width -->
+<div style="
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  width: 100vw;
+  max-width: 100vw;
+  overflow: hidden;
+  text-align: center;
+">
+  <video autoplay muted loop playsinline style="width:100%; height:auto;">
+    <source src="assets/videos/AI MFG Ignited.mp4" type="video/mp4">
+    <!-- Fallback image if video is not supported -->
+    <img src="assets/images/AI MFG Ignited.jpg" alt="AI HLS Ignited Banner">
+  </video>
 </div>
 
 <br>
@@ -52,29 +67,4 @@ Have questions, ideas, or want to contribute? **Let’s innovate together!** Rea
 Help us **transform the manufacturing industry** by sharing these events with your network:  
 
 🔹 **Share on LinkedIn** → [AI MFG Ignited Event Page](https://aka.ms/aimfgIgnited)  
-
-## **License**
-
-This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.  
-
-## Contributing
-
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
-
-When you submit a pull request, a CLA bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
-
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
-
-## Trademarks
-
-This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft 
-trademarks or logos is subject to and must follow 
-[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
-Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
-Any use of third-party trademarks or logos are subject to those third-party's policies.
+🔹 **Visit the GitHub Repo for more details** → [AI MFG Ignited GitHub Repository](https://github.com/wnwanne/aimfgIgnited/tree/main)
