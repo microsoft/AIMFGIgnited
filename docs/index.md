@@ -19,7 +19,7 @@
 
 <br>
 
-Welcome to **AI MFG Ignited**, a webinar series dedicated to showcasing **real-world, high-impact AI solutions** in the Manufacturing (MFG) industry. Powered by **Azure AI** and presented by **Microsoft AI architects and industry experts**, this series is designed to drive meaningful change in healthcare through AI-driven innovation.   
+Welcome to **AI MFG Ignited**, a webinar series dedicated to showcasing **real-world, high-impact AI solutions** in the Manufacturing (MFG) industry. Powered by **Azure AI** and presented by **Microsoft AI architects and industry experts**, this series is designed to drive meaningful change in manufacturing through AI-driven innovation.   
 
 ## **Webinar Series Details** 🛑LIVE   
 
