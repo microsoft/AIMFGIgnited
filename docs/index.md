@@ -24,9 +24,9 @@ Welcome to **AI MFG Ignited**, a webinar series dedicated to showcasing **real-w
 ## **Webinar Series Details** 🛑LIVE   
 
 - **Capacity**: **Limited to 1,000 attendees** – First-come, first-served  
-- **Cost**: **Completely free** – Open to all professionals committed to transforming healthcare  
+- **Cost**: **Completely free** – Open to all professionals committed to transforming manufacturing  
 - **Format**: **Virtual, live sessions with Microsoft experts Q&A**  
-- **Objective**: Empowering attendees with actionable AI strategies to accelerate adoption and drive meaningful change in healthcare. 
+- **Objective**: Empowering attendees with actionable AI strategies to accelerate adoption and drive meaningful change in manufacturing. 
 
 ## **FY25 Upcoming Sessions** 📅
 
