@@ -19,14 +19,14 @@
 
 <br>
 
-Welcome to **AI MFG Ignited**, a webinar series dedicated to showcasing **real-world, high-impact AI solutions** in the Manufacturing (MFG) industry. Powered by **Azure AI** and presented by **Microsoft AI architects and industry experts**, this series is designed to drive meaningful change in healthcare through AI-driven innovation.   
+Welcome to **AI MFG Ignited**, a webinar series dedicated to showcasing **real-world, high-impact AI solutions** in the Manufacturing (MFG) industry. Powered by **Azure AI** and presented by **Microsoft AI architects and industry experts**, this series is designed to drive meaningful change in manufacturing through AI-driven innovation.   
 
 ## **Webinar Series Details** 🛑LIVE   
 
 - **Capacity**: **Limited to 1,000 attendees** – First-come, first-served  
-- **Cost**: **Completely free** – Open to all professionals committed to transforming healthcare  
+- **Cost**: **Completely free** – Open to all professionals committed to transforming manufacturing  
 - **Format**: **Virtual, live sessions with Microsoft experts Q&A**  
-- **Objective**: Empowering attendees with actionable AI strategies to accelerate adoption and drive meaningful change in healthcare. 
+- **Objective**: Empowering attendees with actionable AI strategies to accelerate adoption and drive meaningful change in manufacturing. 
 
 ## **FY25 Upcoming Sessions** 📅
 
@@ -65,5 +65,5 @@ Have questions, ideas, or want to contribute? **Let’s innovate together!** Rea
 
 Help us **transform the manufacturing industry** by sharing these events with your network:  
 
-🔹 **Share on LinkedIn** → [AI MFG Ignited Event Page](https://aka.ms/aimfgIgnited)  
-🔹 **Visit the GitHub Repo for more details** → [AI MFG Ignited GitHub Repository](https://github.com/wnwanne/aimfgIgnited/tree/main)
+🔹 **Share on LinkedIn** → [AI MFG Ignited Event Page](https://microsoft.github.io/AIMFGIgnited/)  
+🔹 **Visit the GitHub Repo for more details** → [AI MFG Ignited GitHub Repository](https://github.com/microsoft/AIMFGIgnited)
