@@ -35,7 +35,6 @@ Welcome to **AI MFG Ignited**, a webinar series dedicated to showcasing **real-w
 | **Complex Document Analysis with Azure OpenAI**                                                     | Register [here](https://msit.events.teams.microsoft.com/event/8a07d4ef-e180-4fa1-916c-ff2563855f79@72f988bf-86f1-41af-91ab-2d7cd011db47) | Thursday, May 16, 2025 \| 12:00 PM – 1:00 PM EST | Available Soon     |
 | **Multimodal RAG for Field Technicians (Voice + Image)**                                            | Register [here](https://msit.events.teams.microsoft.com/event/1adade8f-a9b7-46bc-a607-28b32e2a53e1@72f988bf-86f1-41af-91ab-2d7cd011db47) | Thursday, May 22, 2025 \| 12:00 PM – 1:00 PM EST | Available Soon     |
 | **Video Analysis for Anomaly & Defect Detection with Azure AI**                                     | Register [here](https://msit.events.teams.microsoft.com/event/d75f4fa7-5cab-4683-8177-4bf804464a38@72f988bf-86f1-41af-91ab-2d7cd011db47) | Thursday, May 29, 2025 \| 12:00 PM – 1:00 PM EST | Available Soon     |
-
 | **Building Floor Plan Object Detection and Analysis**                         | Register [here](https://msit.events.teams.microsoft.com/event/a084f25e-a34c-426a-a2bc-a73bf003ee8e@72f988bf-86f1-41af-91ab-2d7cd011db47) | Thursday, June 5, 2025 \| 12:00 PM – 1:00 PM EST | Available Soon     |
 
 ## **Who Should Attend?** 🎯  
