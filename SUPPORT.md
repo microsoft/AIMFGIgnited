@@ -1,53 +1,13 @@
-<<<<<<< HEAD
-# TODO: The maintainer of this repo has not yet edited this file
+## Support
 
-**REPO OWNER**: Do you want Customer Service & Support (CSS) support for this product/project?
+Thank you for your interest in this project!
 
-- **No CSS support:** Fill out this template with information about how to file issues and get help.
-- **Yes CSS support:** Fill out an intake form at [aka.ms/onboardsupport](https://aka.ms/onboardsupport). CSS will work with/help you to determine next steps.
-- **Not sure?** Fill out an intake as though the answer were "Yes". CSS will help you decide.
+Please note that this repository is for demonstration purposes only. It is **not actively supported**, and we are **not accepting feature requests or pull requests** at this time.
 
-*Then remove this first heading from this SUPPORT.MD file before publishing your repo.*
+If you encounter an issue with the content or have questions related to usage, feel free to email us at **aimfgignited@microsoft.com** for general feedback or clarification. However, please understand that responses may be limited and prioritized based on resource availability.
 
-# Support
+This project is maintained by Microsoft as a reference example and is not intended for use in production environments.
 
-## How to file issues and get help  
+---
 
-This project uses GitHub Issues to track bugs and feature requests. Please search the existing 
-issues before filing new issues to avoid duplicates.  For new issues, file your bug or 
-feature request as a new Issue.
-
-For help and questions about using this project, please **REPO MAINTAINER: INSERT INSTRUCTIONS HERE 
-FOR HOW TO ENGAGE REPO OWNERS OR COMMUNITY FOR HELP. COULD BE A STACK OVERFLOW TAG OR OTHER
-CHANNEL. WHERE WILL YOU HELP PEOPLE?**.
-
-## Microsoft Support Policy  
-
-Support for this **PROJECT or PRODUCT** is limited to the resources listed above.
-=======
-# TODO: The maintainer of this repo has not yet edited this file
-
-**REPO OWNER**: Do you want Customer Service & Support (CSS) support for this product/project?
-
-- **No CSS support:** Fill out this template with information about how to file issues and get help.
-- **Yes CSS support:** Fill out an intake form at [aka.ms/onboardsupport](https://aka.ms/onboardsupport). CSS will work with/help you to determine next steps.
-- **Not sure?** Fill out an intake as though the answer were "Yes". CSS will help you decide.
-
-*Then remove this first heading from this SUPPORT.MD file before publishing your repo.*
-
-# Support
-
-## How to file issues and get help  
-
-This project uses GitHub Issues to track bugs and feature requests. Please search the existing 
-issues before filing new issues to avoid duplicates.  For new issues, file your bug or 
-feature request as a new Issue.
-
-For help and questions about using this project, please **REPO MAINTAINER: INSERT INSTRUCTIONS HERE 
-FOR HOW TO ENGAGE REPO OWNERS OR COMMUNITY FOR HELP. COULD BE A STACK OVERFLOW TAG OR OTHER
-CHANNEL. WHERE WILL YOU HELP PEOPLE?**.
-
-## Microsoft Support Policy  
-
-Support for this **PROJECT or PRODUCT** is limited to the resources listed above.
->>>>>>> 4385b11e48adc3641f525d7a56834fb7893c8317
+For any code of conduct concerns, please refer to the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com).
