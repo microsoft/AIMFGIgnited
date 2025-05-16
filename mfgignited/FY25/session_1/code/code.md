@@ -1,1 +1,0 @@
-<img src="assets/images/AI MFG Ignited.jpg" alt="AI MFG Ignited Banner">
