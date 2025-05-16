@@ -13,7 +13,7 @@
   <video autoplay muted loop playsinline style="width:100%; height:auto;">
     <source src="assets/videos/AI MFG Ignited.mp4" type="video/mp4">
     <!-- Fallback image if video is not supported -->
-    <img src="assets/images/AI MFG Ignited.jpg" alt="AI HLS Ignited Banner">
+    <img src="assets/images/AI MFG Ignited.jpg" alt="AI MFG Ignited Banner">
   </video>
 </div>
 

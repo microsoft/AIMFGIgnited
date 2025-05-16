@@ -1,1 +1,1 @@
-![alt text](utils\images\image.png)
+<img src="assets/images/AI MFG Ignited.jpg" alt="AI MFG Ignited Banner">
