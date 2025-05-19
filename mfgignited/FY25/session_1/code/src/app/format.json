@@ -1,0 +1,84 @@
+{
+  "Drawing_Number": {
+    "type": "nvarchar",
+    "example": "DWG-0001"
+  },
+  "Name": {
+    "type": "nvarchar",
+    "example": "Sample Drawing Name"
+  },
+  "Revision_History": {
+    "type": "array of objects",
+    "properties": {
+      "Revision_Number": {
+        "type": "integer",
+        "example": 1
+      },
+      "Description": {
+        "type": "nvarchar",
+        "example": "Initial release of the drawing."
+      },
+      "Date": {
+        "type": "datetime",
+        "example": "2025-01-01T00:00:00Z"
+      }
+    },
+    "example": [
+      {
+        "Revision_Number": "A",
+        "Description": "Initial release of the drawing.",
+        "Date": "2025-01-01T00:00:00Z"
+      },
+      {
+        "Revision_Number": "B",
+        "Description": "Additional technical notes added.",
+        "Date": "2025-03-15T00:00:00Z"
+      }
+    ]
+  },
+  "Raw_Material": {
+    "type": "nvarchar",
+    "example": "Aluminum 6061"
+  },
+  "Bill_of_Materials": {
+    "type": "array of objects",
+    "properties": {
+      "Item_ID": {
+        "type": "nvarchar",
+        "example": "1"
+      },
+      "Quantity": {
+        "type": "integer",
+        "example": 2
+      },
+      "Part_Number": {
+        "type": "nvarchar",
+        "example": "PN-12345"
+      },
+      "Description": {
+        "type": "nvarchar",
+        "example": "Bracket Assembly"
+      },
+      "Material": {
+        "type": "nvarchar",
+        "example": "Stainless Steel"
+      }
+    },
+    "example": [
+      {
+        "Item_ID": "1",
+        "Quantity": 2,
+        "Part_Number": "PN-12345",
+        "Description": "Bracket Assembly",
+        "Material": "Stainless Steel"
+      },
+      {
+        "Item_ID": "2",
+        "Quantity": 4,
+        "Part_Number": "PN-67890",
+        "Description": "Bolts",
+        "Material": "Stainless Steel"
+      }
+    ]
+  }
+}

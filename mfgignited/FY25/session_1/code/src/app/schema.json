@@ -1,0 +1,47 @@
+{
+    "Drawing_Number": {
+      "description": "A unique identifier assigned to the drawing."
+    },
+    "Name": {
+      "description": "The title or name of the drawing."
+    },
+    "Revision_History": {
+      "description": "A list of JSON objects representing the revision history of the drawing.",
+      "sample": [
+        {
+          "Revision_Number": "A",
+          "Description": "Initial release of the drawing.",
+          "Date": "2025-01-01"
+        },
+        {
+          "Revision_Number": "B",
+          "Description": "Updated dimension specifications.",
+          "Date": "2025-03-15"
+        }
+      ]
+    },
+    "Raw_Material": {
+      "description": "The raw material referenced in the drawing - typically located in a table with a prefix 'MASS:'."
+    },
+    "Bill_of_Materials": {
+      "description": "A list of JSON objects representing the Bill of Materials for the drawing.",
+      "sample": [
+        {
+          "Item_ID": "1",
+          "Quantity": "2",
+          "Part_Number": "PN-12345",
+          "Description": "Bracket assembly",
+          "Material": "Aluminum"
+        },
+        {
+          "Item_ID": "2",
+          "Quantity": "4",
+          "Part_Number": "PN-67890",
+          "Description": "Fasteners",
+          "Material": "Stainless Steel"
+        }
+      ]
+    }
+  }
+
+  
