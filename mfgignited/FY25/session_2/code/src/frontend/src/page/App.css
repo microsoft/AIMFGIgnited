@@ -1,0 +1,52 @@
+body {
+    margin: 0;
+}
+
+.container {
+    height: 100vh;
+}
+
+.content-wrapper {
+    height: calc(100% - 58px);
+    display: flex;
+}
+
+.content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 10px 20px 10px;
+    gap: 20px;
+    width: 1024px;
+}
+
+.search-footer {
+    width: 1024px;
+    bottom: 15px;
+    text-align: center;
+}
+
+.search-footer .intro {
+    position: fixed;
+    margin-top: 50px;
+    left: -2%;
+    width: 100%;
+    text-align: left;
+}
+
+.intro-card {
+    width: 1024px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.signin-text {
+    margin-bottom: 10px;
+}
+
+.selected-index {
+    align-self: flex-start;
+}

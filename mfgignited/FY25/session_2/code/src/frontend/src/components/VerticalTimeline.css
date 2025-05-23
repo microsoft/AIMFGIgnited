@@ -1,0 +1,85 @@
+.timeline-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: relative;
+}
+
+.timeline-item {
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+}
+
+.timeline-item::before {
+    content: "";
+    position: absolute;
+    left: 18px;
+    top: 45px;
+    bottom: -8px;
+    width: 2px;
+    background-color: var(--colorNeutralStroke1);
+}
+
+.timeline-item:last-child::before {
+    display: none;
+}
+
+.timeline-icon {
+    width: 36px;
+    height: 36px;
+    background-color: var(--colorNeutralBackground1);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 12px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+    border-radius: 50%;
+    border: 2px solid var(--colorNeutralStroke1);
+}
+
+.timeline-content {
+    flex-grow: 1;
+    padding: 8px 5px 10px 5px;
+}
+
+.timestamp {
+    font-size: 12px;
+    color: var(--colorNeutralForeground3);
+}
+
+.content-editor {
+    margin-top: 10px;
+    max-width: 480px;
+}
+
+.image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    width: 480px;
+    margin-top: 10px;
+}
+
+.image-item {
+    width: 240px;
+    height: auto;
+    object-fit: cover;
+}
+
+.image-container {
+    margin-top: 10px;
+}
+
+.timeline-section-title {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.editor-dialog {
+    max-width: 800px !important;
+}

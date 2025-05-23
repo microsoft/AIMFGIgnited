@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Azure Speech-to-Text Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: dimgray;
+    }
+    
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 10px;
+    }
+    
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #0078d4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+    
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    
+    button:hover:not(:disabled) {
+      background-color: #106ebe;
+    }
+    
+    .transcript-container {
+      border: 1px solid #ccc;
+      padding: 10px;
+      min-height: 200px;
+      border-radius: 4px;
+    }
+    
+    .transcript {
+      white-space: pre-wrap;
+    }
+    
+    .interim {
+      color: gray;
+      font-style: italic;
+    }
+    
+    .status {
+      font-weight: bold;
+    }
+    
+    .credentials-form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: #f9f9f9;
+    }
+    
+    .credentials-form label {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    
+    .credentials-form input {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    
+    .log-container {
+      margin-top: 20px;
+      border: 1px solid #ddd;
+      padding: 10px;
+      height: 200px;
+      overflow-y: auto;
+      background-color: #f5f5f5;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    
+    .volume-meter-container {
+      margin-top: 20px;
+    }
+    
+    .volume-meter {
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      height: 20px;
+      width: 100%;
+      overflow: hidden;
+      background-color: #f5f5f5;
+    }
+    
+    #volume-bar {
+      height: 100%;
+      width: 0%;
+      background-color: #0078d4;
+      transition: width 0.1s ease-in-out;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Azure Speech-to-Text Test</h1>
+    
+    <div class="credentials-form">
+      <h2>Azure Credentials</h2>
+      <label>
+        Azure OpenAI STT/TTS Endpoint:
+        <input type="text" id="endpoint" placeholder="https://your-endpoint.cognitiveservices.azure.com">
+      </label>
+      <label>
+        API Key:
+        <input type="password" id="apiKey" placeholder="Your API Key">
+      </label>
+    </div>
+    
+    <div class="controls">
+      <button id="startBtn" disabled>Start Listening</button>
+      <button id="stopBtn" disabled>Stop Listening</button>
+    </div>
+    
+    <p class="status" id="status">Not connected</p>
+    <div id="error-message" style="color: white; background-color: #d32f2f; padding: 10px; border-radius: 4px; margin-top: 10px; display: none; font-weight: bold;"></div>
+    
+    <div class="transcript-container">
+      <div class="transcript" id="finalTranscript"></div>
+      <div class="interim transcript" id="interimTranscript"></div>
+    </div>
+    
+    <div class="volume-meter-container">
+      <h3>Audio Level:</h3>
+      <div class="volume-meter">
+        <div id="volume-bar" style="height: 20px; background-color: #0078d4; width: 0%;"></div>
+      </div>
+    </div>
+    
+    <h3>Debug Log</h3>
+    <div class="log-container" id="log"></div>
+  </div>
+
+  <script>
+    // Azure Speech-to-Text Direct WebSocket Implementation
+    class AzureSpeechToText {
+      constructor(apiEndpoint, apiKey, options = {}) {
+        this.apiEndpoint = apiEndpoint;
+        this.apiKey = apiKey;
+        this.options = {
+          onTranscriptDelta: text => {},
+          onTranscriptComplete: text => {},
+          onStatusChange: status => {},
+          onError: error => {},
+          onLog: message => {},
+          ...options
+        };
+
+        this.ws = null;
+        this.audioContext = null;
+        this.mediaStream = null;
+        this.processor = null;
+        this.source = null;
+        this.isRunning = false;
+        this._reconnectAttempted = false;
+        this._totalAudioBytesSent = 0;
+        this._lastStatusLog = Date.now();
+
+        // Audio settings
+        this.RATE = 24000; // Match Python example's 24kHz rate
+        this.CHANNELS = 1;
+        this.CHUNK = 1024;
+
+        this.log("Azure Speech-to-Text initialized");
+        this.log(`Using audio settings: ${this.RATE}Hz, ${this.CHANNELS} channel(s), ${this.CHUNK} chunk size`);
+      }
+
+      log(message) {
+        console.log(message);
+        this.options.onLog(message);
+      }
+
+      async start() {
+        if (this.isRunning) {
+          this.log("Already running");
+          return;
+        }
+
+        try {
+          this.log("Connecting to Azure OpenAI Realtime API...");
+          this.options.onStatusChange("Connecting...");
+          
+          // Set up WebSocket connection with API key as query parameter
+          const url = `${this.apiEndpoint.replace("https", "wss")}/openai/realtime?api-version=2025-04-01-preview&intent=transcription&api-key=${encodeURIComponent(this.apiKey)}`;
+          this.log("Connecting to WebSocket URL (API key hidden)");
+          this.ws = new WebSocket(url);
+          
+          // On connection open
+          this.ws.onopen = () => {
+            this.log("Connected! Configuring session...");
+            this.options.onStatusChange("Connected");
+            
+            // Send session configuration - identical to Python example
+            const sessionConfig = {
+              type: "transcription_session.update",
+              session: {
+                input_audio_format: "pcm16",
+                input_audio_transcription: {
+                  model: "gpt-4o-mini-transcribe",
+                  prompt: "Respond in English.",
+                },
+                input_audio_noise_reduction: { type: "near_field" },
+                turn_detection: { type: "server_vad" },
+              },
+            };
+            
+            this.log("Sending session config: " + JSON.stringify(sessionConfig));
+            this.ws.send(JSON.stringify(sessionConfig));
+            
+            // Start streaming microphone after WebSocket is ready
+            this.startMicrophone();
+          };
+          
+          // Handle messages from Azure
+          this.ws.onmessage = (event) => {
+            try {
+              if (typeof event.data === 'string') {
+                const data = JSON.parse(event.data);
+                const eventType = data.type || "";
+                this.log(`Received event: ${eventType}`);
+                
+                // Log all incoming responses for debugging
+                this.log(`Full response: ${JSON.stringify(data)}`);
+                
+                // Check for errors in the response
+                if (eventType === "error") {
+                  this.log(`API Error: ${JSON.stringify(data.error || {})}`, 'error');
+                  this.options.onError(`API Error: ${data.error?.message || 'Unknown error'}`);
+                  
+                  // If there's a serious error, close the connection
+                  if (data.error?.code === "unknown_parameter" || data.error?.code === "invalid_request_error") {
+                    this.log("Closing connection due to configuration error");
+                    this.stop();
+                  }
+                }
+                
+                if (eventType === "conversation.item.input_audio_transcription.failed") {
+                  this.log(`Transcription failed: ${JSON.stringify(data)}`, 'error');
+                  this.options.onError(`Transcription failed: ${data.error?.message || 'Unknown error'}`);
+                }
+                
+                // Stream live incremental transcripts
+                if (eventType === "conversation.item.input_audio_transcription.delta") {
+                  const transcriptPiece = data.delta || "";
+                  if (transcriptPiece) {
+                    this.options.onTranscriptDelta(transcriptPiece);
+                  }
+                }
+                
+                // Handle completed transcriptions
+                if (eventType === "conversation.item.input_audio_transcription.completed") {
+                  const transcript = data.transcript || "";
+                  this.log(`Completed transcript: ${transcript}`);
+                  this.options.onTranscriptComplete(transcript);
+                }
+                
+                // Alternative item format
+                if (eventType === "item") {
+                  const transcript = data.item || "";
+                  if (transcript) {
+                    this.log(`Item transcript: ${transcript}`);
+                    this.options.onTranscriptComplete(transcript);
+                  }
+                }
+              } else {
+                this.log(`Received non-string message: ${typeof event.data}`, 'info');
+              }
+            } catch (error) {
+              this.log(`Error parsing message: ${error}`);
+              // Ignore unrelated events
+            }
+          };
+          
+          // Handle WebSocket errors
+          this.ws.onerror = (error) => {
+            this.log(`WebSocket error: ${error.message || JSON.stringify(error)}`);
+            this.options.onError(`WebSocket error occurred. Please check your network connection and Azure credentials.`);
+            this.options.onStatusChange("Error");
+            
+            // Try to reconnect after WebSocket error, but only once
+            if (this.isRunning && (!this._reconnectAttempted)) {
+              this._reconnectAttempted = true;
+              this.log("Attempting to reconnect in 3 seconds...");
+              setTimeout(() => {
+                if (this.isRunning) {
+                  this.log("Reconnecting...");
+                  this.start();
+                }
+              }, 3000);
+            }
+          };
+          
+          // Handle WebSocket closing
+          this.ws.onclose = (event) => {
+            this.log(`WebSocket closed: ${event.code} - ${event.reason}`);
+            
+            // Provide more specific feedback based on close code
+            let closeReason = "Disconnected";
+            if (event.code === 1006) {
+              closeReason = "Connection closed abnormally. Please check your network connection.";
+            } else if (event.code === 1008 || event.code === 1011) {
+              closeReason = "Connection rejected by server. Please check your Azure credentials.";
+            } else if (event.code === 1000) {
+              closeReason = "Connection closed normally.";
+            }
+            
+            this.options.onStatusChange(closeReason);
+            this.cleanup();
+          };
+          
+          this.isRunning = true;
+        } catch (error) {
+          this.log(`Error starting: ${error}`);
+          this.options.onError(`Failed to start: ${error.message}`);
+          this.options.onStatusChange("Error");
+          this.cleanup();
+        }
+      }
+
+      async startMicrophone() {
+        try {
+          this.log("Requesting microphone access...");
+          
+          // Get microphone access with a preference for 24kHz
+          this.mediaStream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+              sampleRate: this.RATE
+            } 
+          });
+          
+          this.log("Microphone access granted. Setting up audio pipeline...");
+          
+          // Create audio context with desired sample rate
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.audioContext = new AudioContext({
+            sampleRate: this.RATE
+          });
+          
+          const actualSampleRate = this.audioContext.sampleRate;
+          this.log(`Audio context created with sample rate: ${actualSampleRate}Hz (target: ${this.RATE}Hz)`);
+          
+          // Check if sample rate matches our target
+          if (actualSampleRate !== this.RATE) {
+            this.log(`WARNING: Browser is using ${actualSampleRate}Hz instead of requested ${this.RATE}Hz`);
+            this.log(`This may affect transcription quality. Audio resampling needed but not implemented.`);
+            
+            // In a production environment, we would implement resampling here
+            // For simplicity in this test, we'll just warn and continue
+          }
+          
+          // Create audio source from microphone
+          this.source = this.audioContext.createMediaStreamSource(this.mediaStream);
+          
+          // Create script processor for audio processing
+          // Note: ScriptProcessorNode is deprecated but more widely supported than AudioWorkletNode
+          // In a production environment, AudioWorkletNode would be preferable
+          this.log("Creating audio processor (ScriptProcessorNode)");
+          this.log("NOTE: ScriptProcessorNode is deprecated. Consider upgrading to AudioWorkletNode in production.");
+          
+          // Use a power of 2 for buffer size as required by the API
+          this.processor = this.audioContext.createScriptProcessor(2048, 1, 1); // Valid power of 2
+          
+          // Connect audio nodes
+          this.source.connect(this.processor);
+          this.processor.connect(this.audioContext.destination);
+          
+          this.log("Audio pipeline connected. Starting to capture...");
+          this.options.onStatusChange("Listening");
+          
+          // Monitor audio level for debugging
+          let frameCount = 0;
+          let silentFrames = 0;
+          const MAX_SILENT_FRAMES = 30; // About 3 seconds of silence
+          
+          // Process audio frames
+          this.processor.onaudioprocess = (event) => {
+            if (!this.isRunning || !this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+            
+            // Get audio data
+            const inputData = event.inputBuffer.getChannelData(0);
+            
+            // Check audio levels every 5 frames
+            frameCount++;
+            if (frameCount % 5 === 0) {
+              // Calculate RMS (root mean square) for better volume indication
+              let sumSquares = 0;
+              for (let i = 0; i < inputData.length; i++) {
+                sumSquares += inputData[i] * inputData[i];
+              }
+              const rms = Math.sqrt(sumSquares / inputData.length);
+              
+              // Log level at a lower frequency to prevent log spam
+              if (frameCount % 20 === 0) {
+                this.log(`Audio level (RMS): ${rms.toFixed(6)}`);
+              }
+              
+              // Update volume meter in UI
+              const volumeBar = document.getElementById('volume-bar');
+              if (volumeBar) {
+                // Scale RMS value exponentially for better visualization
+                const percentage = Math.min(100, Math.pow(rms * 8, 1.5) * 100); 
+                volumeBar.style.width = `${percentage}%`;
+                
+                // Set colors based on volume level
+                if (percentage < 5) {
+                  volumeBar.style.backgroundColor = '#ff0000'; // Red for very low
+                } else if (percentage < 15) {
+                  volumeBar.style.backgroundColor = '#ffa500'; // Orange for low
+                } else {
+                  volumeBar.style.backgroundColor = '#00cc00'; // Green for good
+                }
+              }
+              
+              // Track silence for user feedback
+              if (rms < 0.005) {
+                silentFrames++;
+                if (silentFrames === MAX_SILENT_FRAMES) {
+                  this.log("WARNING: No audio detected for several seconds. Please check your microphone.");
+                  this.options.onError("No audio detected. Please check if your microphone is working and not muted.");
+                }
+              } else {
+                silentFrames = 0;
+              }
+            }
+            
+            // Convert float32 audio data to Int16 for Azure
+            // This is the critical part that must match the Python example
+            const pcm16 = new Int16Array(inputData.length);
+            for (let i = 0; i < inputData.length; i++) {
+              // Scale Float32 (-1 to 1) to Int16 (-32768 to 32767)
+              pcm16[i] = Math.min(1, Math.max(-1, inputData[i])) * 32767;
+            }
+            
+            try {
+              // The issue is likely in the binary conversion step. We need to make sure
+              // we're handling the endianness properly. PCM16 is little-endian.
+              
+              // Create a properly structured array buffer for the 16-bit PCM data
+              const buffer = new ArrayBuffer(pcm16.length * 2); // 2 bytes per sample for Int16
+              const dataView = new DataView(buffer);
+              
+              // Copy data to make sure we preserve the proper byte order (little-endian)
+              for (let i = 0; i < pcm16.length; i++) {
+                dataView.setInt16(i * 2, pcm16[i], true); // 'true' for little-endian
+              }
+              
+              // Now convert to the raw byte array
+              const audioBytes = new Uint8Array(buffer);
+              
+              // Create a binary string from the bytes
+              let binary = '';
+              const chunkSize = 1024;  // Safe chunk size for most browsers
+              
+              for (let i = 0; i < audioBytes.length; i += chunkSize) {
+                const chunk = audioBytes.slice(i, Math.min(i + chunkSize, audioBytes.length));
+                binary += String.fromCharCode.apply(null, chunk);
+              }
+              
+              const base64Audio = btoa(binary);
+              
+              // Track total bytes sent
+              this._totalAudioBytesSent += audioBytes.length;
+              
+              // Periodically log statistics (every ~5 seconds)
+              const now = Date.now();
+              if (now - this._lastStatusLog > 5000) {
+                this._lastStatusLog = now;
+                this.log(`Audio statistics: ${this._totalAudioBytesSent} bytes sent so far`);
+                this.log(`Audio context state: ${this.audioContext.state}, Sample rate: ${this.audioContext.sampleRate}Hz`);
+              }
+              
+              // Send audio data to Azure - exactly like the Python example
+              if (frameCount % 100 === 0) { // Only log occasionally to avoid spamming
+                this.log(`Sending audio data: ${base64Audio.substring(0, 50)}... (${base64Audio.length} chars)`);
+              }
+              
+              this.ws.send(
+                JSON.stringify({
+                  type: "input_audio_buffer.append",
+                  audio: base64Audio,
+                })
+              );
+            } catch (error) {
+              this.log(`Error sending audio data: ${error.message}`);
+            }
+          };
+        } catch (error) {
+          this.log(`Audio streaming error: ${error}`);
+          this.options.onError(`Microphone error: ${error.message}`);
+          this.cleanup();
+          if (this.ws) this.ws.close();
+        }
+      }
+
+      stop() {
+        if (!this.isRunning) return;
+        
+        this.log("Stopping speech recognition...");
+        this.isRunning = false;
+        
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+          this.ws.close();
+        }
+        
+        this.cleanup();
+        this.options.onStatusChange("Stopped");
+      }
+
+      cleanup() {
+        this.log("Cleaning up resources...");
+        
+        // Clean up audio resources
+        if (this.processor) {
+          this.processor.disconnect();
+          this.processor = null;
+        }
+        
+        if (this.source) {
+          this.source.disconnect();
+          this.source = null;
+        }
+        
+        if (this.mediaStream) {
+          this.mediaStream.getTracks().forEach(track => track.stop());
+          this.mediaStream = null;
+        }
+        
+        if (this.audioContext) {
+          if (this.audioContext.state !== 'closed') {
+            this.audioContext.close();
+          }
+          this.audioContext = null;
+        }
+        
+        this.ws = null;
+        this.isRunning = false;
+        this.log("Cleanup complete");
+      }
+    }      // UI handling
+    document.addEventListener('DOMContentLoaded', () => {
+      const startBtn = document.getElementById('startBtn');
+      const stopBtn = document.getElementById('stopBtn');
+      const statusEl = document.getElementById('status');
+      const errorMessageEl = document.getElementById('error-message');
+      const finalTranscriptEl = document.getElementById('finalTranscript');
+      const interimTranscriptEl = document.getElementById('interimTranscript');
+      const logEl = document.getElementById('log');
+      const endpointEl = document.getElementById('endpoint');
+      const apiKeyEl = document.getElementById('apiKey');
+      const volumeBarEl = document.getElementById('volume-bar');
+      
+      let stt = null;
+      let interimTranscript = '';
+      
+      // Try to load credentials from localStorage if available
+      if (localStorage.getItem('azureEndpoint')) {
+        endpointEl.value = localStorage.getItem('azureEndpoint');
+      }
+      if (localStorage.getItem('azureApiKey')) {
+        apiKeyEl.value = localStorage.getItem('azureApiKey');
+      }
+      
+      // Enable start button if credentials are provided
+      function checkCredentials() {
+        if (endpointEl.value && apiKeyEl.value) {
+          startBtn.disabled = false;
+        } else {
+          startBtn.disabled = true;
+        }
+      }
+      
+      endpointEl.addEventListener('input', checkCredentials);
+      apiKeyEl.addEventListener('input', checkCredentials);
+      checkCredentials();
+      
+      // Add log entry
+      function addLogEntry(message) {
+        const entry = document.createElement('div');
+        entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+        logEl.appendChild(entry);
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+      
+      startBtn.addEventListener('click', () => {
+        // Save credentials to localStorage
+        localStorage.setItem('azureEndpoint', endpointEl.value);
+        localStorage.setItem('azureApiKey', apiKeyEl.value);
+        
+        // Clear previous transcript and error messages
+        finalTranscriptEl.textContent = '';
+        interimTranscriptEl.textContent = '';
+        interimTranscript = '';
+        errorMessageEl.textContent = '';
+        errorMessageEl.style.display = 'none';
+        
+        // Create speech-to-text instance
+        stt = new AzureSpeechToText(endpointEl.value, apiKeyEl.value, {
+          onTranscriptDelta: (text) => {
+            interimTranscript += text;
+            interimTranscriptEl.textContent = interimTranscript;
+          },
+          onTranscriptComplete: (text) => {
+            finalTranscriptEl.textContent += (finalTranscriptEl.textContent ? '\n' : '') + text;
+            interimTranscript = '';
+            interimTranscriptEl.textContent = '';
+          },
+          onStatusChange: (status) => {
+            statusEl.textContent = status;
+            
+            if (status === 'Listening' || status === 'Connecting...' || status === 'Connected') {
+              startBtn.disabled = true;
+              stopBtn.disabled = false;
+            } else if (status === 'Stopped' || status === 'Disconnected' || status === 'Error') {
+              startBtn.disabled = false;
+              stopBtn.disabled = true;
+            }
+          },
+          onError: (error) => {
+            errorMessageEl.textContent = error;
+            errorMessageEl.style.display = 'block';
+            
+            // Clear the error after 10 seconds for non-fatal errors
+            if (!error.includes("API Error") && !error.includes("WebSocket")) {
+              setTimeout(() => {
+                errorMessageEl.style.display = 'none';
+              }, 10000);
+            }
+            
+            addLogEntry(`ERROR: ${error}`);
+          },
+          onLog: addLogEntry
+        });
+        
+        // Start speech recognition
+        stt.start();
+      });
+      
+      stopBtn.addEventListener('click', () => {
+        if (stt) {
+          stt.stop();
+          // Restore original WebSocket.prototype.send
+          WebSocket.prototype.send = WebSocket.prototype.originalSend || WebSocket.prototype.send;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

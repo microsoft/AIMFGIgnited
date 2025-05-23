@@ -1,0 +1,8 @@
+.input-container {
+    display: flex;
+    gap: 10px;
+    flex-direction: column;
+}
+.weightSlider {
+    width: 100%;
+}
