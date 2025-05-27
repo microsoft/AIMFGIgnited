@@ -2,7 +2,7 @@
 
 This sample project contains code for orchestrating multiple agents (built using the Azure AI Agent Service) to extract targeted information from user-provided documents, into a well-defined structure. The agents employed for this task include an Analyst (reviews documents and populates a user-defined template), a Reviewer (reviews and critiques the work of the Analyst), and a Formatter (ensures final extracts adhere to a specific structure with defined data types) It is intended to be used as a generalizable solution that can be adapted and extended to handle automatic analysis of complex documents with the assistance of state-of-the-art LLMs.
 
-![Agent Workflow](img/agent_architecture.png)
+![Agent Workflow](code/img/agent_architecture.png)
 
 Briefly, this repository contains multiple components including:
 
