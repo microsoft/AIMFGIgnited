@@ -1,0 +1,20 @@
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant WebSocket
+    participant STT
+    participant Backend
+    participant TTS
+    
+    User->>Frontend: Speak Question
+    Frontend->>WebSocket: Audio Stream (PCM16)
+    WebSocket->>STT: Forward Audio
+    STT->>WebSocket: Transcript Delta
+    WebSocket->>Frontend: Transcript Update
+    Frontend->>Backend: Complete Transcript
+    Backend->>Backend: Process with RAG
+    Backend->>WebSocket: Response Text
+    WebSocket->>TTS: Generate Speech
+    TTS->>WebSocket: Audio Chunks
+    WebSocket->>Frontend: Audio Stream
+    Frontend->>User: Play Response

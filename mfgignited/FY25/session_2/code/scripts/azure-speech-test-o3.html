@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Best practice: include the viewport meta element -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Azure Speech-to-Text Test (Simplified JS)</title>
+    <link rel="stylesheet" href="azure-speech-test-o3.css">
+  </head>
+  <body>
+    <div class="container">
+      <h1>Azure Speech-to-Text Test (Simplified JS)</h1>
+      <div class="info-box">
+        <p><strong>Note:</strong> This client connects to a local proxy server at ws://localhost:8080.</p>
+        <p>Make sure to start the proxy server first: <code>node proxy.js</code></p>
+      </div>
+      <div class="audio-level-container">
+        <div class="audio-level-bar">
+          <div id="audioLevelBar" class="audio-level-fill"></div>
+        </div>
+        <span id="audioLevelText" class="audio-level-text"></span>
+      </div>
+      <div>
+        <label>
+          Endpoint:
+          <input type="text" id="endpoint" placeholder="https://your-endpoint.cognitiveservices.azure.com" />
+        </label>
+      </div>
+      <div>
+        <label>
+          API Key:
+          <input type="password" id="apiKey" placeholder="Your API Key" />
+        </label>
+      </div>
+      <div class="controls">
+        <button id="startBtn">Start Listening</button>
+        <button id="stopBtn" disabled>Stop Listening</button>
+      </div>
+      <pre id="log"></pre>
+    </div>
+
+    <script type="module">
+      // This is a simplified JavaScript version, modeled after your Python code.
+      class AzureSpeechToText {
+        constructor(apiEndpoint, apiKey, options) {
+          this.apiEndpoint = apiEndpoint;
+          this.apiKey = apiKey;
+          this.options = Object.assign({
+            onLog: (msg) => {},
+            onError: (err) => {}
+          }, options);
+          this.ws = null;
+          this.audioContext = null;
+          this.mediaStream = null;
+          this.processor = null;
+          this.isRunning = false;
+          // Audio settings: 24000 Hz, mono, CHUNK 1024 (matching the Python example)
+          this.RATE = 24000;
+          this.CHANNELS = 1;
+          this.CHUNK = 1024;
+          this.log(`Initialized with settings: ${this.RATE}Hz, ${this.CHANNELS}ch, CHUNK ${this.CHUNK}`);
+        }
+
+        log(msg) {
+          console.log(msg);
+          this.options.onLog(msg);
+        }
+
+        start() {
+          if (this.isRunning) {
+            this.log("Already running");
+            return;
+          }
+          this.isRunning = true;
+          // Connect to the local proxy WebSocket server (which handles Azure authentication)
+          const wsUrl = "ws://localhost:8080";
+          this.log("Connecting to local proxy WebSocket server...");
+          this.ws = new WebSocket(wsUrl);
+
+          this.ws.onopen = () => {
+            this.log("Connected! Configuring session…");
+            const sessionConfig = {
+              type: "transcription_session.update",
+              session: {
+                input_audio_format: "pcm16",
+                input_audio_transcription: {
+                  model: "gpt-4o-mini-transcribe",
+                  prompt: "Respond in English."
+                },
+                input_audio_noise_reduction: { type: "near_field" },
+                turn_detection: { type: "server_vad" }
+              }
+            };
+            this.log("Sending session config: " + JSON.stringify(sessionConfig));
+            this.ws.send(JSON.stringify(sessionConfig));
+            this.startMicrophone();
+          };
+
+          // --- ENHANCED LOGGING FOR DEBUGGING ---
+          this.ws.onmessage = (event) => {
+            // Log raw message
+            this.log("WS Raw Message: " + (typeof event.data === 'string' ? event.data : '[binary data]'));
+            // Try to parse JSON and log as object
+            if (typeof event.data === 'string') {
+              try {
+                const parsed = JSON.parse(event.data);
+                this.log("WS Parsed Message: " + JSON.stringify(parsed, null, 2));
+              } catch (e) {
+                this.log("WS Message is not valid JSON");
+              }
+            }
+          };
+
+          this.ws.onerror = (err) => {
+            this.log("WebSocket error: " + JSON.stringify(err));
+            this.options.onError("WebSocket error occurred. Make sure your proxy server is running with: node proxy.js");
+          };
+
+          this.ws.onclose = (event) => {
+            this.log(`WebSocket closed: ${event.code} - ${event.reason}`);
+            if (event.code === 1006) {
+              this.options.onError("Connection closed abnormally. Check that the proxy server is running (node proxy.js)");
+            }
+            this.cleanup();
+          };
+        }
+
+        async startMicrophone() {
+          try {
+            this.log("Requesting microphone access...");
+            this.mediaStream = await navigator.mediaDevices.getUserMedia({
+              audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true,
+                sampleRate: this.RATE
+              }
+            });
+            this.log("Microphone access granted. Setting up audio pipeline...");
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: this.RATE });
+            this.log(`Audio context created with sample rate: ${this.audioContext.sampleRate}Hz`);
+            if (this.audioContext.sampleRate !== this.RATE) {
+              this.log(`WARNING: Browser is using ${this.audioContext.sampleRate}Hz instead of requested ${this.RATE}Hz. This may affect transcription quality.`);
+            }
+
+            const source = this.audioContext.createMediaStreamSource(this.mediaStream);
+            // --- AUDIOWORKLET MIGRATION ---
+            try {
+              await this.audioContext.audioWorklet.addModule('pcm-processor.js');
+              this.log('AudioWorklet module loaded.');
+            } catch (e) {
+              this.log('Failed to load AudioWorklet module: ' + e.message);
+              this.options.onError('Failed to load AudioWorklet module: ' + e.message);
+              this.cleanup();
+              return;
+            }
+            try {
+              this.processor = new AudioWorkletNode(this.audioContext, 'pcm-processor', {
+                numberOfInputs: 1,
+                numberOfOutputs: 1,
+                outputChannelCount: [1],
+                processorOptions: {
+                  chunkSize: this.CHUNK
+                }
+              });
+            } catch (e) {
+              this.log('Failed to create AudioWorkletNode: ' + e.message);
+              this.options.onError('Failed to create AudioWorkletNode: ' + e.message);
+              this.cleanup();
+              return;
+            }
+            source.connect(this.processor);
+            // Optionally connect to destination for monitoring (silent output)
+            // this.processor.connect(this.audioContext.destination);
+
+            // Handle PCM16 data from the worklet
+            this.processor.port.onmessage = (event) => {
+              if (!this.isRunning || !this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+              const { pcm16, rms } = event.data;
+              if (!pcm16 || !pcm16.length) return;
+              // Convert Int16Array to base64
+              const buffer = new ArrayBuffer(pcm16.length * 2);
+              const view = new DataView(buffer);
+              for (let i = 0; i < pcm16.length; i++) {
+                view.setInt16(i * 2, pcm16[i], true);
+              }
+              const uint8 = new Uint8Array(buffer);
+              let binary = "";
+              const chunkSize = 1024;
+              for (let i = 0; i < uint8.length; i += chunkSize) {
+                const chunk = uint8.slice(i, i + chunkSize);
+                binary += String.fromCharCode(...chunk);
+              }
+              const base64Audio = btoa(binary);
+              this.ws.send(JSON.stringify({
+                type: "input_audio_buffer.append",
+                audio: base64Audio
+              }));
+            //   this.log("Sent audio chunk: base64 length " + base64Audio.length + ", first 32: " + base64Audio.slice(0, 32));
+
+              // --- AUDIO LEVEL METER ---
+              const percent = Math.min(1, rms * 4) * 100;
+              const bar = document.getElementById('audioLevelBar');
+              if (bar) {
+                bar.style.width = percent + '%';
+                bar.style.background = percent > 60 ? '#f44336' : percent > 30 ? '#ff9800' : '#4caf50';
+              }
+              const text = document.getElementById('audioLevelText');
+              if (text) {
+                text.textContent = percent > 1 ? `Mic Level: ${percent.toFixed(0)}%` : '';
+              }
+              // --- END AUDIO LEVEL METER ---
+
+              // Debug: Log first 16 Int16 samples and first 32 chars of base64
+              if (window.DEBUG_PCM16) {
+                this.log('PCM16[0:16]: ' + Array.from(pcm16.slice(0, 16)).join(','));
+                this.log('base64Audio[0:32]: ' + base64Audio.slice(0, 32));
+              }
+            };
+            this.processor.port.onmessageerror = (e) => {
+              this.log('AudioWorklet port message error: ' + e);
+              this.options.onError('AudioWorklet port message error: ' + e);
+            };
+
+            this.log("Audio pipeline connected (AudioWorklet). Capturing audio...");
+          } catch (error) {
+            this.log("Error in startMicrophone: " + error.message);
+            if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+              this.options.onError('Microphone access denied. Please allow microphone permissions in your browser.');
+            } else {
+              this.options.onError(error.message);
+            }
+            this.cleanup();
+          }
+        }
+
+        stop() {
+          if (!this.isRunning) {
+            this.log("Not running");
+            return;
+          }
+          this.log("Stopping...");
+          this.isRunning = false;
+          this.cleanup();
+          this.log("Stopped.");
+        }
+
+        cleanup() {
+          this.log("Cleaning up resources…");
+          if (this.processor) {
+            this.processor.disconnect();
+            if (this.processor.port) this.processor.port.close && this.processor.port.close();
+            this.processor = null;
+          }
+          if (this.audioContext && this.audioContext.state !== "closed") {
+            this.audioContext.close();
+            this.audioContext = null;
+          }
+          if (this.mediaStream) {
+            this.mediaStream.getTracks().forEach(track => track.stop());
+            this.mediaStream = null;
+          }
+          this.ws = null;
+          this.isRunning = false;
+          // Reset audio meter
+          const bar = document.getElementById('audioLevelBar');
+          if (bar) bar.style.width = '0%';
+          const text = document.getElementById('audioLevelText');
+          if (text) text.textContent = '';
+          this.log("Cleanup complete.");
+        }
+      }
+
+      // --- UI ELEMENTS AND EVENT HANDLERS ---
+      const endpointInput = document.getElementById('endpoint');
+      const apiKeyInput = document.getElementById('apiKey');
+      const startBtn = document.getElementById('startBtn');
+      const stopBtn = document.getElementById('stopBtn');
+      const logOutput = document.getElementById('log');
+
+      // --- LOCALSTORAGE PERSISTENCE ---
+      // Load from localStorage on page load
+      endpointInput.value = localStorage.getItem('azure_stt_endpoint') || '';
+      apiKeyInput.value = localStorage.getItem('azure_stt_apikey') || '';
+      // Save to localStorage on change
+      endpointInput.addEventListener('input', () => {
+        localStorage.setItem('azure_stt_endpoint', endpointInput.value);
+      });
+      apiKeyInput.addEventListener('input', () => {
+        localStorage.setItem('azure_stt_apikey', apiKeyInput.value);
+      });
+
+      // --- INSTANTIATE AZURESPEECHTOTEXT ---
+      const speechToText = new AzureSpeechToText("", "", {
+        onLog: (msg) => {
+          // Append log message to the logOutput element
+          logOutput.textContent += msg + '\n';
+          // Auto-scroll to the bottom
+          logOutput.scrollTop = logOutput.scrollHeight;
+        },
+        onError: (err) => {
+          alert("Error: " + err);
+        }
+      });
+
+      // --- BUTTON EVENT LISTENERS ---
+      startBtn.addEventListener('click', () => {
+        const endpoint = endpointInput.value.trim();
+        const apiKey = apiKeyInput.value.trim();
+        if (!endpoint || !apiKey) {
+          alert("Please enter both endpoint and API key.");
+          return;
+        }
+        speechToText.apiEndpoint = endpoint;
+        speechToText.apiKey = apiKey;
+        speechToText.start();
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+      });
+
+      stopBtn.addEventListener('click', () => {
+        speechToText.stop();
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+      });
+
+      // --- DEBUGGING HELPERS ---
+      window.DEBUG_PCM16 = false; // Set to false to disable PCM16 debugging logs
+    </script>
+  </body>
+</html>

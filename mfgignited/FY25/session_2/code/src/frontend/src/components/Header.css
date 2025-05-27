@@ -1,0 +1,45 @@
+.header {
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #0078d4;
+    color: white;
+}
+
+.header-dark {
+    background-color: #1a1a1a;
+}
+
+.header-logo {
+    display: flex;
+    align-items: center;
+}
+
+.header-title {
+    color: white;
+    margin: 0;
+    margin-left: 10px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+}
+
+/* Target the Switch label for better visibility */
+.header-right .fui-Switch__label {
+    color: white !important;
+    font-weight: 500;
+    margin-right: 8px;
+}
+
+/* Improve the switch indicator contrast */
+.header-right .fui-Switch__indicator {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Ensure the thumb is visible against all backgrounds */
+.header-right .fui-Switch__thumb {
+    background-color: #0078d4 !important;
+}

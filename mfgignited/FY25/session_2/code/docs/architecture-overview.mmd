@@ -1,0 +1,59 @@
+graph TB
+    subgraph "Frontend"
+        UI[React UI]
+        Voice[Voice Control<br/>Component]
+        Audio[Audio Processing]
+    end
+
+    subgraph "WebSocket Layer"
+        WS[WebSocket Server<br/>/voice endpoint]
+    end
+
+    subgraph "Backend Services"
+        API[Python API<br/>Service]
+        RAG[RAG Base<br/>Component]
+        Search[Search Service]
+    end
+
+    subgraph "Azure AI Services"
+        STT[Azure OpenAI<br/>GPT-4o-mini-transcribe]
+        TTS[Azure OpenAI<br/>GPT-4o-mini-tts]
+        GPT[Azure OpenAI<br/>GPT-4o]
+        AIS[Azure AI Search<br/>Multimodal Index]
+        DI[Azure Document<br/>Intelligence]
+    end
+
+    subgraph "Storage"
+        Blob[Azure Blob Storage<br/>Images & Documents]
+    end
+
+    %% User interactions
+    User((Field Technician))
+    User -->|Voice Input| Voice
+    User -->|Image Upload| UI
+    UI -->|Display Results| User
+    Audio -->|Audio Output| User
+
+    %% Frontend connections
+    Voice <-->|Audio Stream| WS
+    UI <-->|Chat Messages| API
+    Voice --> Audio
+
+    %% WebSocket connections
+    WS <-->|Audio Data| STT
+    WS <-->|Text Data| TTS
+
+    %% Backend connections
+    API --> RAG
+    RAG --> Search
+    Search --> AIS
+    RAG --> GPT
+    API --> DI
+    
+    %% Azure connections
+    AIS <--> Blob
+    DI --> Blob
+    
+    %% Data flow annotations
+    WS -.->|Transcribed Text| API
+    API -.->|Response Text| WS

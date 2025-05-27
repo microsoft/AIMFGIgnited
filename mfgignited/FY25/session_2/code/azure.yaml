@@ -1,0 +1,32 @@
+name: aisearch-multimodal-rag-demo
+metadata:
+  template: azd-init@1.14.0
+services:
+  backend:
+    project: ./src/backend
+    language: py
+    host: appservice
+    hooks:
+      prepackage:
+        windows:
+          shell: pwsh
+          run: cd ../frontend ; npm install ; npm run build
+          interactive: false
+          continueOnError: false
+        posix:
+          shell: sh
+          run: cd ../frontend && npm install && npm run build
+          interactive: false
+          continueOnError: false
+hooks:
+  postprovision:
+    windows:
+      shell: pwsh
+      run: ./scripts/prepdocs.ps1
+      interactive: true
+      continueOnError: false
+    posix:
+      shell: sh
+      run: ./scripts/prepdocs.sh
+      interactive: true
+      continueOnError: false

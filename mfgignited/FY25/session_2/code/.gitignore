@@ -1,0 +1,78 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Exclude all .http files
+
+*.exe
+*.msi
+*.log
+kaggle-resume-dataset/
+src/ContentProcessorWeb/something.md
+
+.DS_Store
+.vscode/settings.json
+src/ContentProcessorWeb/tryingtoDebug.sh
+TodoList.md
+
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+venv/
+env/
+ENV/
+
+# Environment variables
+.env
+# But don't ignore the sample env file
+!.env.sample
+
+# IDE specific files
+.idea/
+# .vscode/
+*.swp
+*.swo
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Streamlit
+.streamlit/
+
+# Output files
+output/
+*.csv
+.DS_Store
+do-not-commit
+backend/node_modules
+node_modules
+setupEnv.ps1
+image-upload-implementation.md
